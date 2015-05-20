@@ -9,7 +9,7 @@ from gridnavigator import *
 
 
 
-nav = GridNavigator()
+nav = GreedyGridNavigator()
 
 
 world = GameWorld(SEED, WORLD, SCREEN)
