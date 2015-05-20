@@ -18,7 +18,6 @@ world.initializeTerrain([[(628, 698), (582, 717), (549, 688), (554, 546), (676, 
 world.setPlayerAgent(agent)
 agent.setNavigator(nav)
 nav.setWorld(world)
-nav.drawGrid()
 world.initializeRandomResources(NUMRESOURCES)
 world.debugging = True
 world.run()
