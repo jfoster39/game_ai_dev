@@ -1,4 +1,4 @@
-import sys, pygame, math, numpy, random, time, copy, ipdb
+import sys, pygame, math, numpy, random, time, copy
 from pygame.locals import *
 
 from constants import *
@@ -16,21 +16,33 @@ def myCreateGrid(world, cellsize):
     x           = 0
     i           = 0
     j           = 0
-    points      = world.getPoints()
+    lines       = world.getLinesWithoutBorders()
+    obstacles   = world.getObstacles()
 
     def isValidCell(cellBounds):
-        for point in points:
-            xLowerBound = cellBounds[0]
-            yLowerBound = cellBounds[1]
-            xUpperBound = cellBounds[0] + cellsize
-            yUpperBound = cellBounds[1] + cellsize
+        xLowerBound = cellBounds[0]
+        yLowerBound = cellBounds[1]
+        xUpperBound = cellBounds[0] + cellsize
+        yUpperBound = cellBounds[1] + cellsize
 
-            if point[0] < xUpperBound and point[0] > xLowerBound and point[1] < yUpperBound and point[1] > yLowerBound:
+        cellPointTopLeft    = (xLowerBound, yLowerBound)
+        cellPointBottomLeft = (xLowerBound, yUpperBound)
+        cellPointTopRight   = (xUpperBound, yLowerBound)
+        cellPointBottomRight= (xUpperBound, yUpperBound)
+
+        for obstacle in obstacles:
+            if obstacle.pointInside(cellPointTopLeft):
                 return False
+
+        for line in lines:
+            if ( calculateIntersectPoint( cellPointTopLeft, cellPointTopRight, line[0], line[1] ) or
+                    calculateIntersectPoint( cellPointTopLeft, cellPointBottomLeft, line[0], line[1] ) or
+                    calculateIntersectPoint( cellPointBottomLeft, cellPointBottomRight, line[0], line[1] ) or
+                    calculateIntersectPoint( cellPointTopRight, cellPointBottomRight, line[0], line[1] ) ):
+                return False
+
         return True
 
-
-    ### YOUR CODE GOES BELOW HERE ###
     # Calculate row and column numbers
     while y < SCREEN[1]:
         num_rows    += 1
@@ -39,19 +51,17 @@ def myCreateGrid(world, cellsize):
             num_columns += 1
             x           += cellsize
 
-    dimensions  = (num_columns, num_rows)
-    grid        = [[10 for i in range(num_rows+1)] for j in range(num_columns+1)]
+    dimensions  = (num_columns-1, num_rows-1)
+    grid        = [[0 for i in range(num_rows)] for j in range(num_columns)]
 
     # Calculate bounds of each cell and create grid
+    j = -1
     for y in range(0, SCREEN[1], int(38)):
-        j  = 0
+        j += 1
         i  = 0
         for x in range(0, SCREEN[0], int(38)):
-            j += 1
-            i += 1
             cellBounds = (x,y)
-            grid[j][i] = isValidCell(cellBounds)
+            grid[i][j] = isValidCell(cellBounds)
+            i += 1
 
-    ### YOUR CODE GOES ABOVE HERE ###
     return grid, dimensions
-
