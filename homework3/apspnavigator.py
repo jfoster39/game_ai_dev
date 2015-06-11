@@ -1,5 +1,5 @@
-import sys, pygame, math, numpy, random, time, copy
-from pygame.locals import * 
+import sys, pygame, math, numpy, random, time, copy, ipdb
+from pygame.locals import *
 
 from constants import *
 from utils import *
@@ -14,7 +14,7 @@ from mynavigatorhelpers import *
 ### APSPNavigator
 ###
 ### Creates a path node network and implements the FloydWarshall all-pairs shortest-path algorithm to create a path to the given destination.
-			
+
 class APSPNavigator(NavMeshNavigator):
 
 	### next: indicates which node to traverse to next to get to a given destination. A dictionary of dictionaries such that next[p1][p2] tells you where to go if you are at p1 and want to go to p2
@@ -24,7 +24,7 @@ class APSPNavigator(NavMeshNavigator):
 		Navigator.__init__(self)
 		self.next = None
 		self.dist = None
-		
+
 
 	### Create the pathnode network and pre-compute all shortest paths along the network.
 	### self: the navigator object
@@ -33,14 +33,14 @@ class APSPNavigator(NavMeshNavigator):
 		self.pathnodes, self.pathnetwork, self.navmesh = myCreatePathNetwork(world, self.agent)
 		self.next, self.dist = APSP(self.pathnodes, self.pathnetwork)
 		return None
-		
+
 	### Finds the shortest path from the source to the destination.
 	### self: the navigator object
 	### source: the place the agent is starting from (i.e., it's current location)
 	### dest: the place the agent is told to go to
 	def computePath(self, source, dest):
 		### Make sure the next and dist matricies exist
-		if self.agent != None and self.world != None and self.next != None and self.dist != None: 
+		if self.agent != None and self.world != None and self.next != None and self.dist != None:
 			self.source = source
 			self.destination = dest
 			if clearShot(source, dest, self.world.getLinesWithoutBorders(), self.world.getPoints(), self.agent):
@@ -48,6 +48,8 @@ class APSPNavigator(NavMeshNavigator):
 			else:
 				start = findClosestUnobstructed(source, self.pathnodes, self.world.getLines())
 				end = findClosestUnobstructed(dest, self.pathnodes, self.world.getLines())
+				if self.dist[start][end] == INFINITY:
+					ipdb.set_trace()
 				if start != None and end != None and start in self.dist and end in self.dist[start] and self.dist[start][end] < INFINITY:
 					path = findPath(start, end, self.next)
 					path = shortcutPath(source, dest, path, self.world, self.agent)
@@ -78,6 +80,14 @@ class APSPNavigator(NavMeshNavigator):
 def findPath(start, end, next):
 	path = []
 	### YOUR CODE GOES BELOW HERE ###
+	if next[start][end] == None:
+		return path
+
+	path.append( start )
+
+	while start != end:
+		start = next[start][end]
+		path.append( start )
 
 	### YOUR CODE GOES ABOVE HERE ###
 	return path
@@ -85,7 +95,7 @@ def findPath(start, end, next):
 
 
 
-	
+
 def APSP(nodes, edges):
 	dist = {} # a dictionary of dictionaries. dist[p1][p2] will give you the distance.
 	next = {} # a dictionary of dictionaries. next[p1][p2] will give you the next node to go to, or None
@@ -93,6 +103,26 @@ def APSP(nodes, edges):
 		next[n] = {}
 		dist[n] = {}
 	### YOUR CODE GOES BELOW HERE ###
+	nodes_copy = copy.copy( nodes )
+
+	for node in nodes:
+		for node_copy in nodes_copy:
+			if ( node, node_copy ) in edges:
+				dist[node][node_copy] = distance( node, node_copy )
+				dist[node_copy][node] = distance( node, node_copy )
+				next[node][node_copy] = node_copy
+				next[node_copy][node] = node
+			elif ( node_copy, node ) not in dist:
+				dist[node][node_copy] = INFINITY
+				next[node][node_copy] = None
+
+	for k in nodes:
+		for i in nodes:
+		 	for j in nodes:
+		 		if dist[i][k] + dist[k][j] < dist[i][j]:
+		 			dist[i][j] = dist[i][k] + dist[k][j]
+		 			next[i][j] = next[i][k]
+		 			next[j][i] = next[i][j]
 
 	### YOUR CODE GOES ABOVE HERE ###
 	return next, dist
