@@ -1,4 +1,4 @@
-import sys, pygame, math, numpy, random, time, copy, ipdb
+import sys, pygame, math, numpy, random, time, copy
 from pygame.locals import *
 
 from constants import *
@@ -48,8 +48,6 @@ class APSPNavigator(NavMeshNavigator):
 			else:
 				start = findClosestUnobstructed(source, self.pathnodes, self.world.getLines())
 				end = findClosestUnobstructed(dest, self.pathnodes, self.world.getLines())
-				if self.dist[start][end] == INFINITY:
-					ipdb.set_trace()
 				if start != None and end != None and start in self.dist and end in self.dist[start] and self.dist[start][end] < INFINITY:
 					path = findPath(start, end, self.next)
 					path = shortcutPath(source, dest, path, self.world, self.agent)
@@ -107,14 +105,16 @@ def APSP(nodes, edges):
 
 	for node in nodes:
 		for node_copy in nodes_copy:
-			if ( node, node_copy ) in edges:
-				dist[node][node_copy] = distance( node, node_copy )
-				dist[node_copy][node] = distance( node, node_copy )
-				next[node][node_copy] = node_copy
-				next[node_copy][node] = node
-			elif ( node_copy, node ) not in dist:
-				dist[node][node_copy] = INFINITY
-				next[node][node_copy] = None
+			dist[node][node_copy] = INFINITY
+			dist[node_copy][node] = INFINITY
+			next[node][node_copy] = None
+			next[node_copy][node] = None
+
+	for edge in edges:
+		dist[edge[0]][edge[1]] = distance( edge[0], edge[1] )
+		dist[edge[1]][edge[0]] = distance( edge[1], edge[0] )
+		next[edge[0]][edge[1]] = edge[1]
+		next[edge[1]][edge[0]] = edge[0]
 
 	for k in nodes:
 		for i in nodes:
@@ -122,7 +122,6 @@ def APSP(nodes, edges):
 		 		if dist[i][k] + dist[k][j] < dist[i][j]:
 		 			dist[i][j] = dist[i][k] + dist[k][j]
 		 			next[i][j] = next[i][k]
-		 			next[j][i] = next[i][j]
 
 	### YOUR CODE GOES ABOVE HERE ###
 	return next, dist
