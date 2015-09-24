@@ -5,7 +5,7 @@ from constants import *
 from utils import *
 from core import *
 
-
+# ssh commit test
 # Creates a grid as a 2D array of True/False values (True =  traversable). Also returns the dimensions of the grid as a (columns, rows) list.
 def myCreateGrid(world, cellsize):
     grid        = None
